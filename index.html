@@ -237,6 +237,30 @@ function drawDemo() {
   }
   dctx.setLineDash([]);
 
+  // direction arrow: head at city center, tail toward storm-origin direction
+  if (EV.direction_deg != null && GEO.city_center) {
+    const ang = EV.direction_deg * Math.PI / 180;   // math convention, FROM-direction
+    const L = 0.62;
+    const [cx0, cy0] = ll2xy(GEO.city_center[1], GEO.city_center[0], e, W, H);
+    const [tx0, ty0] = ll2xy(GEO.city_center[1] + L * Math.cos(ang) * 1.16,
+                             GEO.city_center[0] + L * Math.sin(ang), e, W, H);
+    const drawArrow = (color, width, headw) => {
+      const dx = cx0 - tx0, dy = cy0 - ty0, len = Math.hypot(dx, dy);
+      const ux = dx / len, uy = dy / len;
+      const hx = cx0 - ux * headw * 1.8, hy = cy0 - uy * headw * 1.8;
+      dctx.strokeStyle = color; dctx.fillStyle = color;
+      dctx.lineWidth = width; dctx.lineCap = "round";
+      dctx.beginPath(); dctx.moveTo(tx0, ty0); dctx.lineTo(hx, hy); dctx.stroke();
+      dctx.beginPath();
+      dctx.moveTo(cx0, cy0);
+      dctx.lineTo(hx - uy * headw, hy + ux * headw);
+      dctx.lineTo(hx + uy * headw, hy - ux * headw);
+      dctx.closePath(); dctx.fill();
+    };
+    drawArrow(dark ? "#000000" : "#ffffff", 8, 13);   // outline
+    drawArrow(dark ? "#f0f0f0" : "#111111", 4, 10);   // arrow
+  }
+
   // markers
   const mk = EV.markers;
   const drawSym = (sym, lonlat, color, size) => {
