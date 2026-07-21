@@ -112,7 +112,7 @@
 
   <div class="card mapcard">
     <div class="maphead">AORC hourly precipitation <span id="dlabel"></span></div>
-    <canvas id="dmap" width="860" height="760"></canvas>
+    <canvas id="dmap" width="1720" height="1520"></canvas>
   </div>
 
   <div>
@@ -124,8 +124,8 @@
         ▲ max accumulation<br>
         ◯ q99 centroid<br>
         <span style="color:#c2410c">◆</span> freq25 peak<br>
-        ─ Austin city boundary<br>
-        <span style="color:#00b3c8">┄┄ city analysis domain</span>
+        ─ Austin municipal boundary (full-purpose)<br>
+        <span style="color:#e8000b">┄┄ Neighborhood Planning Area (NPA)</span>
       </div>
     </div>
     <div class="card">
@@ -185,8 +185,10 @@ function ll2xy(lonv, latv, e, W, H) {
 
 function drawDemo() {
   if (!EV || !GEO) return;
-  const e = GEO.extent, W = dcan.width, H = dcan.height;
+  const SCALE = 2;
+  const e = GEO.extent, W = dcan.width / SCALE, H = dcan.height / SCALE;
   const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  dctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
   dctx.clearRect(0, 0, W, H);
   dctx.fillStyle = dark ? "#101012" : "#ffffff";
   dctx.fillRect(0, 0, W, H);
@@ -223,13 +225,13 @@ function drawDemo() {
   }
 
   // city boundary + analysis domain
-  dctx.strokeStyle = dark ? "#e8e8e8" : "#222222"; dctx.lineWidth = 1.4;
+  dctx.strokeStyle = dark ? "#e8e8e8" : "#222222"; dctx.lineWidth = 2.0;
   for (const ring of GEO.city_rings) {
     dctx.beginPath();
     ring.forEach((p, i) => { const [x, y] = ll2xy(p[0], p[1], e, W, H); i ? dctx.lineTo(x, y) : dctx.moveTo(x, y); });
     dctx.stroke();
   }
-  dctx.strokeStyle = "#00b3c8"; dctx.lineWidth = 1.2; dctx.setLineDash([3, 3]);
+  dctx.strokeStyle = "#e8000b"; dctx.lineWidth = 1.8; dctx.setLineDash([4, 3]);
   for (const line of GEO.mask_lines) {
     dctx.beginPath();
     line.forEach((p, i) => { const [x, y] = ll2xy(p[0], p[1], e, W, H); i ? dctx.lineTo(x, y) : dctx.moveTo(x, y); });
