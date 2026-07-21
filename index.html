@@ -123,6 +123,7 @@
         ★ event peak intensity<br>
         ▲ max accumulation<br>
         ◯ q99 centroid<br>
+        <span style="color:#c2410c">◆</span> freq25 peak<br>
         ─ Austin city boundary<br>
         <span style="color:#00b3c8">┄┄ city analysis domain</span>
       </div>
@@ -247,6 +248,7 @@ function drawDemo() {
   drawSym("★", mk.peak, "#f5c500", 26);
   drawSym("▲", mk.accum, "#2a78d6", 20);
   drawSym("◯", mk.q99, "#8b3af0", 20);
+  if (mk.freq25) drawSym("◆", mk.freq25, "#c2410c", 18);
   dctx.textAlign = "start"; dctx.textBaseline = "alphabetic";
 
   // readouts
