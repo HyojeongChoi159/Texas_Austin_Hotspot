@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Austin Flood-Risk Planning Tool — Mockup</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:        #f9f9f7;
+    --surface:     #fcfcfb;
+    --ink:         #0b0b0b;
+    --ink-2:       #52514e;
+    --muted:       #898781;
+    --grid:        #e1e0d9;
+    --border:      rgba(11,11,11,0.10);
+    --seq-300:     #6da7ec;
+    --seq-450:     #2a78d6;
+    --seq-600:     #184f95;
+    --good:        #0ca30c;
+    --warning:     #fab219;
+    --serious:     #ec835a;
+    --critical:    #d03b3b;
+    --city-fill:   #f0efec;
+    --river:       #9ec5f4;
+    --road:        #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page:      #0d0d0d;
+      --surface:   #1a1a19;
+      --ink:       #ffffff;
+      --ink-2:     #c3c2b7;
+      --muted:     #898781;
+      --grid:      #2c2c2a;
+      --border:    rgba(255,255,255,0.10);
+      --seq-300:   #5598e7;
+      --seq-450:   #3987e5;
+      --city-fill: #22221f;
+      --river:     #1c5cab;
+      --road:      #383835;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--ink);
+    padding: 20px; min-height: 100vh;
+  }
+  header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+  h1 { font-size: 22px; font-weight: 700; }
+  .badge {
+    font-size: 12px; font-weight: 700; letter-spacing: .04em;
+    color: #7a4a12; background: #fde8c7; border: 1px solid #e8b96a;
+    padding: 3px 10px; border-radius: 999px;
+  }
+  @media (prefers-color-scheme: dark) {
+    .badge { color: #fab219; background: #2a2214; border-color: #6b5015; }
+  }
+  .sub { color: var(--ink-2); font-size: 13px; margin-bottom: 16px; }
+
+  .layout { display: grid; grid-template-columns: 250px 1fr 300px; gap: 16px; align-items: start; }
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px;
+  }
+  .card h2 { font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+
+  /* compass */
+  .compass { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 18px; }
+  .compass button {
+    font: inherit; font-size: 13px; font-weight: 600; padding: 9px 0;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--ink-2); cursor: pointer;
+  }
+  .compass button:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .compass button.active { background: var(--seq-450); border-color: var(--seq-450); color: #fff; }
+  .compass .blank { visibility: hidden; }
+
+  .seg { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
+  .seg button {
+    flex: 1; font: inherit; font-size: 13px; font-weight: 600; padding: 9px 0;
+    border: none; background: transparent; color: var(--ink-2); cursor: pointer;
+  }
+  .seg button.active { background: var(--seq-450); color: #fff; }
+
+  .slider-row { margin-bottom: 6px; }
+  .slider-row label { font-size: 13px; color: var(--ink-2); display: block; margin-bottom: 6px; }
+  .slider-row output { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--seq-450); }
+  .play {
+    width: 100%; margin-top: 10px; font: inherit; font-size: 14px; font-weight: 700;
+    padding: 10px 0; border-radius: 8px; border: none; cursor: pointer;
+    background: var(--seq-450); color: #fff;
+  }
+  .play:hover { background: var(--seq-600); }
+
+  /* map */
+  .mapcard { padding: 10px 16px 14px; }
+  .maphead { display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px; }
+  .maphead .t { font-size: 15px; font-weight: 700; }
+  .maphead .t span { color: var(--ink-2); font-weight: 400; }
+  svg text { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .legend .sw { width: 13px; height: 13px; border-radius: 4px; }
+
+  /* right panel */
+  .zone { margin-bottom: 12px; }
+  .zone .name { display: flex; justify-content: space-between; font-size: 13.5px; margin-bottom: 4px; }
+  .zone .name b { font-weight: 600; }
+  .zone .name .pct { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .zone .bar { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 7%, transparent); overflow: hidden; }
+  .zone .bar i { display: block; height: 100%; border-radius: 4px; background: var(--seq-450); transition: width .3s; }
+
+  .timing { font-size: 13.5px; color: var(--ink-2); margin-bottom: 8px; }
+  .timing b { color: var(--ink); font-weight: 700; }
+
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 10; display: none;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.18);
+    padding: 8px 11px; font-size: 12.5px; color: var(--ink-2);
+  }
+  .tooltip b { color: var(--ink); font-size: 13px; }
+
+  footer { margin-top: 14px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Austin Flood-Risk Planning Tool</h1>
+  <span class="badge">MOCKUP — SYNTHETIC VALUES</span>
+</header>
+<p class="sub">Given a forecast storm direction and time of day, show where flood risk concentrates — 1–2 days ahead.</p>
+
+<div class="layout">
+
+  <!-- controls -->
+  <div class="card">
+    <h2>Forecast input</h2>
+    <div class="slider-row" style="margin-bottom:14px">
+      <label>Storm approaching from</label>
+      <div class="compass" id="compass"></div>
+    </div>
+    <label style="font-size:13px;color:var(--ink-2);display:block;margin-bottom:6px">Time of day</label>
+    <div class="seg" id="daynight">
+      <button data-v="day" class="active">☀️ Day</button>
+      <button data-v="night">🌙 Night</button>
+    </div>
+    <div class="slider-row">
+      <label>Lead time — <output id="leadout">T−24 h</output></label>
+      <input type="range" id="lead" min="-36" max="6" step="1" value="-24">
+    </div>
+    <button class="play" id="play">▶ Animate storm passage</button>
+  </div>
+
+  <!-- map -->
+  <div class="card mapcard">
+    <div class="maphead">
+      <div class="t">Flood-risk map <span id="maplabel"></span></div>
+    </div>
+    <svg id="map" viewBox="0 0 800 620" role="img" aria-label="Flood risk map of the Austin area"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <!-- outputs -->
+  <div>
+    <div class="card" style="margin-bottom:16px">
+      <h2>Hotspot probability — top watersheds</h2>
+      <div id="zones"></div>
+    </div>
+    <div class="card">
+      <h2>Expected timing</h2>
+      <p class="timing">Peak-rain window: <b id="peakwin">—</b></p>
+      <svg id="timingchart" viewBox="0 0 268 110" style="width:100%"></svg>
+      <p class="timing" style="margin-top:8px">Heaviest rain expected <b id="relpos">over the city</b></p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  All probabilities are synthetic placeholders. They will be replaced by AORC-derived storm climatology
+  (Workstreams A–B: direction × day/night conditioned frequencies, hotspot statistics, Monte Carlo significance).
+</footer>
+
+<div class="tooltip" id="tip"></div>
+
+<script>
+"use strict";
+const DIRS = ["NW","N","NE","W",null,"E","SW","S","SE"];
+const DIRVEC = { N:[0,1], NE:[-1,1], E:[-1,0], SE:[-1,-1], S:[0,-1], SW:[1,-1], W:[1,0], NW:[1,1] };
+const state = { dir: "E", daynight: "day", lead: -24, playing: false };
+
+/* ---------- controls ---------- */
+const compass = document.getElementById("compass");
+DIRS.forEach(d => {
+  const b = document.createElement("button");
+  if (d === null) { b.className = "blank"; b.textContent = "·"; }
+  else {
+    b.textContent = d;
+    if (d === state.dir) b.classList.add("active");
+    b.onclick = () => { state.dir = d;
+      compass.querySelectorAll("button").forEach(x => x.classList.remove("active"));
+      b.classList.add("active"); render(); };
+  }
+  compass.appendChild(b);
+});
+document.getElementById("daynight").querySelectorAll("button").forEach(b => {
+  b.onclick = () => { state.daynight = b.dataset.v;
+    document.querySelectorAll("#daynight button").forEach(x => x.classList.remove("active"));
+    b.classList.add("active"); render(); };
+});
+const lead = document.getElementById("lead"), leadout = document.getElementById("leadout");
+lead.oninput = () => { state.lead = +lead.value; render(); };
+
+const playBtn = document.getElementById("play");
+let timer = null;
+playBtn.onclick = () => {
+  if (timer) { clearInterval(timer); timer = null; playBtn.textContent = "▶ Animate storm passage"; return; }
+  state.lead = -36; lead.value = -36;
+  playBtn.textContent = "⏸ Pause";
+  timer = setInterval(() => {
+    state.lead += 1;
+    if (state.lead > 6) { clearInterval(timer); timer = null; playBtn.textContent = "▶ Animate storm passage"; state.lead = 6; }
+    lead.value = state.lead; render();
+  }, 140);
+};
+
+/* ---------- geography (stylized) ---------- */
+const W = 800, H = 620, CX = 400, CY = 300;
+const svg = document.getElementById("map");
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  (parent || svg).appendChild(e); return e;
+}
+
+/* static layers */
+const gBase = el("g", {}), gCells = el("g", {}), gGeo = el("g", {}), gStorm = el("g", {});
+
+/* city boundary (rough Austin blob) */
+el("path", { d: "M330,90 C420,60 500,90 540,150 C600,180 620,260 600,330 C630,400 570,500 490,530 C430,570 340,560 290,510 C220,480 190,400 210,330 C180,250 240,120 330,90 Z",
+  fill: "var(--city-fill)", stroke: "var(--border)", "stroke-width": 2 }, gBase);
+
+/* Colorado River / Lady Bird Lake */
+el("path", { d: "M150,330 C250,300 330,340 400,325 C470,310 520,350 660,330",
+  fill: "none", stroke: "var(--river)", "stroke-width": 7, "stroke-linecap": "round", opacity: .8 }, gGeo);
+/* I-35 */
+el("path", { d: "M430,70 C440,200 425,420 435,560", fill: "none", stroke: "var(--road)", "stroke-width": 3.5 }, gGeo);
+/* MoPac */
+el("path", { d: "M330,80 C325,220 335,430 325,555", fill: "none", stroke: "var(--road)", "stroke-width": 2.5 }, gGeo);
+/* US-183 */
+el("path", { d: "M200,180 C330,230 520,150 640,220", fill: "none", stroke: "var(--road)", "stroke-width": 2.5 }, gGeo);
+/* labels */
+const lbl = (x, y, t, size, anchor) => el("text", { x, y, "font-size": size || 12, fill: "var(--muted)", "text-anchor": anchor || "start" }, gGeo).textContent = t;
+lbl(408, 305, "Downtown", 12);
+lbl(440, 100, "I-35", 11);
+lbl(303, 100, "MoPac", 11);
+lbl(645, 325, "Colorado R.", 11);
+
+/* watershed anchor points (rough) */
+const ZONES = [
+  { name: "Onion Creek",      x: 470, y: 500, base: .55 },
+  { name: "Walnut Creek",     x: 500, y: 170, base: .48 },
+  { name: "Shoal Creek",      x: 370, y: 250, base: .52 },
+  { name: "Williamson Creek", x: 380, y: 440, base: .45 },
+  { name: "Bull Creek",       x: 280, y: 180, base: .38 },
+  { name: "Boggy Creek",      x: 480, y: 320, base: .50 },
+];
+
+/* ---------- risk model (synthetic) ---------- */
+function stormCenter() {
+  const m = DIRVEC[state.dir];                 // motion vector in SVG coords (from dir → across city)
+  const d = -state.lead * 12;                  // px before city center (arrives at lead 0, ~12 px/h)
+  return { x: CX - m[0] * d, y: CY - m[1] * d };
+}
+function hotspotWeight(x, y) {
+  // static bias: east side + river corridor slightly elevated (placeholder for real climatology)
+  let w = 0.45 + 0.25 * Math.max(0, Math.min(1, (x - 330) / 300));
+  w += 0.18 * Math.exp(-Math.pow((y - 325) / 90, 2));
+  if (state.daynight === "night") w = w * 0.9 + 0.12;   // night: flatter, slightly higher floor
+  return w;
+}
+function riskAt(x, y) {
+  const c = stormCenter();
+  const m = DIRVEC[state.dir];
+  const dx = x - c.x, dy = y - c.y;
+  const along = dx * m[0] + dy * m[1];          // + ahead of the storm along its track
+  const cross = dx * m[1] - dy * m[0];
+  // moving plume, leading edge ahead of the center
+  const plume = Math.exp(-Math.pow((along - 60) / 240, 2) - Math.pow(cross / 150, 2));
+  // static forecast swath along the expected track through the city
+  const cxr = (x - CX) * m[1] - (y - CY) * m[0];
+  const swath = Math.exp(-Math.pow(cxr / 200, 2));
+  const intensity = state.daynight === "day" ? 1.0 : 0.9;
+  const w = hotspotWeight(x, y);
+  return Math.min(1, w * swath * (0.55 + 0.75 * plume) * intensity);
+}
+function riskColor(r) {
+  if (r < 0.25) return "var(--good)";
+  if (r < 0.45) return "var(--warning)";
+  if (r < 0.68) return "var(--serious)";
+  return "var(--critical)";
+}
+function riskName(r) {
+  if (r < 0.25) return "Low";
+  if (r < 0.45) return "Moderate";
+  if (r < 0.68) return "High";
+  return "Severe";
+}
+
+/* ---------- risk cells ---------- */
+const cells = [];
+const STEP = 34, PAD = 2;
+const inCity = (x, y) => {
+  const nx = (x - CX) / 210, ny = (y - CY) / 235;
+  return nx * nx + ny * ny < 1.12;
+};
+for (let x = 180; x < 640; x += STEP)
+  for (let y = 70; y < 580; y += STEP) {
+    const cx = x + STEP / 2, cy = y + STEP / 2;
+    if (!inCity(cx, cy)) continue;
+    const r = el("rect", { x: x + PAD, y: y + PAD, width: STEP - 2 * PAD, height: STEP - 2 * PAD,
+      rx: 5, fill: "var(--good)", opacity: 0.55, stroke: "var(--surface)", "stroke-width": 2 }, gCells);
+    cells.push({ r, cx, cy });
+  }
+
+/* tooltip */
+const tip = document.getElementById("tip");
+svg.addEventListener("mousemove", e => {
+  const t = e.target;
+  const c = cells.find(c => c.r === t);
+  if (!c) { tip.style.display = "none"; return; }
+  const risk = riskAt(c.cx, c.cy);
+  tip.innerHTML = `<b>${riskName(risk)} risk</b><br>P(flooding impact): ${(risk * 100).toFixed(0)} %<br><span style="opacity:.7">synthetic value</span>`;
+  tip.style.display = "block";
+  tip.style.left = (e.clientX + 14) + "px";
+  tip.style.top = (e.clientY + 14) + "px";
+});
+svg.addEventListener("mouseleave", () => tip.style.display = "none");
+
+/* storm glyph */
+const stormG = el("g", {}, gStorm);
+const stormShadow = el("circle", { r: 95, fill: "var(--seq-300)", opacity: 0.18 }, stormG);
+const stormCore = el("circle", { r: 46, fill: "var(--seq-450)", opacity: 0.32 }, stormG);
+const stormDot = el("circle", { r: 10, fill: "var(--seq-600)" }, stormG);
+const stormArrow = el("path", { d: "M0,0 L34,0 M34,0 L26,-6 M34,0 L26,6",
+  stroke: "var(--seq-600)", "stroke-width": 3.5, fill: "none", "stroke-linecap": "round" }, stormG);
+const stormLabel = el("text", { "font-size": 12, "font-weight": 700, fill: "var(--seq-600)", "text-anchor": "middle", y: -56 }, stormG);
+stormLabel.textContent = "storm";
+
+/* legend */
+const LEG = [["Low", "var(--good)", "✓"], ["Moderate", "var(--warning)", "!"], ["High", "var(--serious)", "▲"], ["Severe", "var(--critical)", "✖"]];
+document.getElementById("legend").innerHTML =
+  LEG.map(([n, c, ic]) => `<span class="item"><span class="sw" style="background:${c}"></span>${ic} ${n}</span>`).join("") +
+  `<span class="item" style="margin-left:auto"><span class="sw" style="background:var(--seq-450);opacity:.5"></span>storm position</span>`;
+
+/* ---------- timing chart ---------- */
+const tsvg = document.getElementById("timingchart");
+function renderTiming() {
+  tsvg.innerHTML = "";
+  const w = 268, h = 110, pad = { l: 8, r: 8, t: 12, b: 22 };
+  const peakT = state.daynight === "day" ? 0.5 : -2.5;  // synthetic: night storms peak earlier relative to arrival
+  const pts = [];
+  for (let t = -36; t <= 6; t += 1) {
+    const p = Math.exp(-Math.pow((t - peakT) / 7, 2));
+    pts.push([t, p]);
+  }
+  const X = t => pad.l + (t + 36) / 42 * (w - pad.l - pad.r);
+  const Y = p => pad.t + (1 - p) * (h - pad.t - pad.b);
+  const e = (tag, attrs) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); tsvg.appendChild(n); return n; };
+  // baseline
+  e("line", { x1: pad.l, x2: w - pad.r, y1: h - pad.b, y2: h - pad.b, stroke: "var(--grid)", "stroke-width": 1 });
+  // area
+  const dArea = "M" + pts.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" L") +
+    ` L${X(6)},${h - pad.b} L${X(-36)},${h - pad.b} Z`;
+  e("path", { d: dArea, fill: "var(--seq-450)", opacity: 0.15 });
+  const dLine = "M" + pts.map(p => `${X(p[0]).toFixed(1)},${Y(p[1]).toFixed(1)}`).join(" L");
+  e("path", { d: dLine, fill: "none", stroke: "var(--seq-450)", "stroke-width": 2 });
+  // now marker
+  e("line", { x1: X(state.lead), x2: X(state.lead), y1: pad.t - 4, y2: h - pad.b, stroke: "var(--ink)", "stroke-width": 1.5, "stroke-dasharray": "3 3", opacity: .6 });
+  const nowT = e("text", { x: X(state.lead), y: pad.t - 2, "font-size": 10, fill: "var(--ink-2)", "text-anchor": "middle" });
+  nowT.textContent = "now";
+  // axis labels
+  [["T−36h", -36, "start"], ["T−18h", -18, "middle"], ["arrival", 0, "middle"], ["+6h", 6, "end"]].forEach(([s, t, a]) => {
+    const n = e("text", { x: X(t), y: h - 6, "font-size": 10, fill: "var(--muted)", "text-anchor": a });
+    n.textContent = s;
+  });
+}
+
+/* ---------- zones panel ---------- */
+function renderZones() {
+  const list = ZONES.map(z => {
+    const r = riskAt(z.x, z.y) * (0.6 + 0.4 * z.base) * 1.15;
+    return { name: z.name, p: Math.min(0.95, r) };
+  }).sort((a, b) => b.p - a.p).slice(0, 5);
+  document.getElementById("zones").innerHTML = list.map(z => `
+    <div class="zone">
+      <div class="name"><b>${z.name}</b><span class="pct">${(z.p * 100).toFixed(0)} %</span></div>
+      <div class="bar"><i style="width:${(z.p * 100).toFixed(0)}%"></i></div>
+    </div>`).join("");
+}
+
+/* ---------- render ---------- */
+function render() {
+  leadout.textContent = state.lead < 0 ? `T−${-state.lead} h` : state.lead === 0 ? "arrival" : `T+${state.lead} h`;
+  document.getElementById("maplabel").textContent =
+    `— ${state.daynight === "day" ? "daytime" : "nighttime"} storm from the ${state.dir}`;
+
+  cells.forEach(c => {
+    const r = riskAt(c.cx, c.cy);
+    c.r.setAttribute("fill", riskColor(r));
+    c.r.setAttribute("opacity", (0.30 + 0.45 * r).toFixed(2));
+  });
+
+  const sc = stormCenter();
+  const m = DIRVEC[state.dir];
+  const ang = Math.atan2(m[1], m[0]) * 180 / Math.PI;
+  stormG.setAttribute("transform", `translate(${sc.x.toFixed(0)},${sc.y.toFixed(0)})`);
+  stormArrow.setAttribute("transform", `rotate(${ang.toFixed(0)})`);
+
+  // timing text
+  const peakStart = state.daynight === "day" ? "T−2h" : "T−5h";
+  const peakEnd = state.daynight === "day" ? "T+3h" : "T0";
+  document.getElementById("peakwin").textContent = `${peakStart} → ${peakEnd}`;
+  const along = (CX - sc.x) * m[0] + (CY - sc.y) * m[1];
+  document.getElementById("relpos").textContent =
+    along > 80 ? "upstream of the city" : along < -80 ? "downstream of the city" : "over the city";
+
+  renderTiming();
+  renderZones();
+}
+render();
+</script>
+</body>
+</html>
